@@ -419,6 +419,7 @@ function semantica_cfdi() {
     $sem = new Sem_CFDI();
     $sem->valida($xml,$conn);
     echo "<h2>$sem->codigo</h2>";
+    echo "<h2>$sem->mensaje</h2>";
     echo "<hr/>";
 }
 // }}} Valida semantica nomi12
