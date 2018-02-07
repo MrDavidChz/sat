@@ -572,9 +572,11 @@ class Sem_CFDI {
                 return false;
             }
             $Impuestos = $Concepto->getElementsByTagName('Impuestos');
-            if ($Impuestos->length>0) {
-                $Traslados = $Impuestos->item(0)->getElementsByTagName('Traslado');
-                $Retenciones = $Impuestos->item(0)->getElementsByTagName('Retencion');
+            for ($indi=0; $indi<$Impuestos->length; $indi++) {
+                $nodo = $Impuestos->item($indi);
+                if (!$nodo->parentNode->isSameNode($Concepto)) continue;
+                $Traslados = $nodo->getElementsByTagName('Traslado');
+                $Retenciones = $nodo->getElementsByTagName('Retencion');
                 if ($Traslados->length==0 && $Retenciones->length==0) {
                     $this->status = "CFDI33152 En caso de utilizar el nodo Impuestos en un concepto, se deben incluir impuestos  de traslado y/o retenciones.";
                     $this->codigo = "33152 ".$this->status;
@@ -904,13 +906,17 @@ class Sem_CFDI {
                     return false;
                 }
                 $tras[$llave] = true;
-                $row = $this->Obten_Catalogo("c_TasaOCuota",$TasaOCuota,$impu,$TipoFactor);
-                if (sizeof($row) == 0) {
-                    $this->status = "CFDI33193 El valor seleccionado debe corresponder a un valor del catalogo donde la columna impuesto corresponda con el campo impuesto y la columna factor corresponda con el campo TipoFactor.";
-                    $this->codigo = "33193 ".$this->status;
-                    $this->mensaje = "totales traslado Impuesto=$impu TasaOCuota=$TasaOCuota TipoFactor=$TipoFactor";
-                    return false;
-                }
+                if ($impu=="003" && $TipoFactor=="Cuota" && $TasaOCuota < 43.77) { // IEPS
+                    $ok=true;
+                } else {
+                    $row = $this->Obten_Catalogo("c_TasaOCuota",$TasaOCuota,$impu,$TipoFactor);
+                    if (sizeof($row) == 0) {
+                        $this->status = "CFDI33193 El valor seleccionado debe corresponder a un valor del catalogo donde la columna impuesto corresponda con el campo impuesto y la columna factor corresponda con el campo TipoFactor.";
+                        $this->codigo = "33193 ".$this->status;
+                        $this->mensaje = "totales traslado Impuesto=$impu TasaOCuota=$TasaOCuota TipoFactor=$TipoFactor";
+                        return false;
+                    } // NO hay registro
+                } // es IEPS
                 $impo=$Traslado->getAttribute("Importe");
                 $t_tras += (double)$impo;
                 $dec_impo = $this->cantidad_decimales($impo);
