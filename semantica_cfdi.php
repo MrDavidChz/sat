@@ -266,12 +266,24 @@ class Sem_CFDI {
                 }
             }
         }
+        $locales = $Comprobante->getElementsByTagName("ImpuestosLocales");
+        $t_locales=0;
+        $nb_locales = $locales->length;
+        for ($i=0; $i<$nb_locales; $i++) {
+            $nodo = $locales->item($i);
+            $aux = (double)$nodo->getAttribute("TotaldeRetenciones");
+            $t_locales -= $aux;
+            $aux = (double)$nodo->getAttribute("TotaldeTraslados");
+            $t_locales += $aux;
+        }
+        $t_locales = round($t_locales,2);
         $t_impuestos = round($t_impuestos,2);
-        $aux = (double)$SubTotal - (double)$Descuento + $t_impuestos;
+        $aux = (double)$SubTotal - 
+               (double)$Descuento + $t_impuestos + $t_locales;
         if (abs($Total - $aux)>0.001) {
             $this->status = "CFDI33118 El campo Total no corresponde con la suma del subtotal, menos los descuentos aplicables, más las contribuciones recibidas (impuestos trasladados - federales o locales, derechos, productos, aprovechamientos, aportaciones de seguridad social, contribuciones de mejoras) menos los impuestos retenidos.";
             $this->codigo = "33118 ".$this->status;
-            $this->mensaje = "Total=$Total aux=$aux SubTotal=$SubTotal Descuento=$Descuento t_impuestos=$t_impuestos";
+            $this->mensaje = "Total=$Total aux=$aux SubTotal=$SubTotal Descuento=$Descuento t_impuestos=$t_impuestos locales=$t_locales";
             return false;
         }
         // $Limite_superior=($TipoDeComprobante=="N")?2000000:100000000; // TODO : Leerlo del SAT
